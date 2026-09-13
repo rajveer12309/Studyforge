@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viper Study Hub</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0b1020;color:#eef2ff}
+header{padding:28px 18px;text-align:center;background:linear-gradient(135deg,#111a33,#18244a);border-bottom:1px solid #2d3b63}
+h1{margin:0;font-size:34px}.sub{color:#9eacd0;margin:8px 0 0}
+.container{max-width:1050px;margin:auto;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.card{background:#121a2e;border:1px solid #273554;border-radius:18px;padding:20px;box-shadow:0 8px 25px #0004}
+.card h2{margin-top:0;font-size:20px}.emoji{font-size:30px}
+button{border:0;border-radius:10px;padding:11px 15px;background:#526dff;color:white;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+input,textarea{width:100%;background:#0c1326;color:white;border:1px solid #30405f;border-radius:10px;padding:11px;margin:7px 0;font:inherit}
+textarea{min-height:110px;resize:vertical}
+.task{display:flex;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #26324d}
+.task input{width:auto;margin:0}.done{text-decoration:line-through;color:#7785a8}
+.timer{text-align:center;font-size:48px;font-weight:bold;margin:12px}
+.progress{height:12px;background:#26324d;border-radius:20px;overflow:hidden}.bar{height:100%;width:0;background:#657cff;transition:.3s}
+footer{text-align:center;color:#7886a8;padding:30px 10px;font-size:14px}
+.small{color:#9eacd0;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 Viper Study Hub</h1>
+  <p class="sub">Class 10 • Study smarter, not harder.</p>
+</header>
+
+<main class="container">
+  <section class="grid">
+    <div class="card">
+      <div class="emoji">📐</div><h2>Mathematics</h2>
+      <p class="small">Algebra • Geometry • Trigonometry</p>
+      <button onclick="showMsg('Maths session started!')">Study Maths</button>
+    </div>
+    <div class="card">
+      <div class="emoji">🔬</div><h2>Science</h2>
+      <p class="small">Physics • Chemistry • Biology</p>
+      <button onclick="showMsg('Science session started!')">Study Science</button>
+    </div>
+    <div class="card">
+      <div class="emoji">🌍</div><h2>Social Science</h2>
+      <p class="small">History • Geography • Civics • Economics</p>
+      <button onclick="showMsg('SST session started!')">Study SST</button>
+    </div>
+    <div class="card">
+      <div class="emoji">📖</div><h2>Languages</h2>
+      <p class="small">English • Hindi</p>
+      <button onclick="showMsg('Language session started!')">Study Languages</button>
+    </div>
+  </section>
+
+  <br>
+  <section class="grid">
+    <div class="card">
+      <h2>⏱️ Focus Timer</h2>
+      <div class="timer" id="timer">25:00</div>
+      <button onclick="startTimer()">Start</button>
+      <button onclick="pauseTimer()">Pause</button>
+      <button onclick="resetTimer()">Reset</button>
+      <p class="small">Try one focused 25-minute session.</p>
+    </div>
+
+    <div class="card">
+      <h2>✅ Today's Tasks</h2>
+      <input id="taskInput" placeholder="Add a study task...">
+      <button onclick="addTask()">Add Task</button>
+      <div id="tasks"></div>
+      <p class="small" id="count">0 tasks completed</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 Daily Progress</h2>
+      <p id="progressText">0% complete</p>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <p class="small">Complete your tasks to increase your progress.</p>
+    </div>
+
+    <div class="card">
+      <h2>📝 Quick Notes</h2>
+      <textarea id="notes" placeholder="Write formulas, definitions, reminders..."></textarea>
+      <button onclick="saveNotes()">Save Notes</button>
+      <p class="small" id="saved"></p>
+    </div>
+  </section>
+</main>
+
+<footer>Made by <strong>Rajveer (Viper)</strong> 🐍 • Keep learning. Keep improving.</footer>
+
+<script>
+let seconds=1500, interval=null;
+const timer=document.getElementById('timer');
+function updateTimer(){
+  let m=Math.floor(seconds/60),s=seconds%60;
+  timer.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  if(seconds<=0){clearInterval(interval);interval=null;alert('🎉 Focus session complete! Take a short break.');seconds=1500;updateTimer();}
+}
+function startTimer(){if(!interval) interval=setInterval(()=>{seconds--;updateTimer()},1000)}
+function pauseTimer(){clearInterval(interval);interval=null}
+function resetTimer(){pauseTimer();seconds=1500;updateTimer()}
+
+let tasks=[];
+function addTask(){
+  const input=document.getElementById('taskInput'), text=input.value.trim();
+  if(!text)return;
+  tasks.push({text,done:false});input.value='';renderTasks();
+}
+function renderTasks(){
+  const box=document.getElementById('tasks');box.innerHTML='';
+  tasks.forEach((t,i)=>{
+    const row=document.createElement('div');row.className='task';
+    row.innerHTML=`<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${i})">
+      <span class="${t.done?'done':''}" style="flex:1">${escapeHtml(t.text)}</span>
+      <button onclick="deleteTask(${i})">×</button>`;
+    box.appendChild(row);
+  });
+  const done=tasks.filter(t=>t.done).length;
+  document.getElementById('count').textContent=`${done} of ${tasks.length} tasks completed`;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('bar').style.width=pct+'%';
+  document.getElementById('progressText').textContent=pct+'% complete';
+}
+function toggleTask(i){tasks[i].done=!tasks[i].done;renderTasks()}
+function deleteTask(i){tasks.splice(i,1);renderTasks()}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function saveNotes(){
+  localStorage.setItem('viperNotes',document.getElementById('notes').value);
+  document.getElementById('saved').textContent='✓ Notes saved on this device.';
+}
+document.getElementById('notes').value=localStorage.getItem('viperNotes')||'';
+function showMsg(msg){alert('📚 '+msg)}
+renderTasks();
+updateTimer();
+</script>
+</body>
+</html>
